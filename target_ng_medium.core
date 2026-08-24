@@ -16,9 +16,10 @@ CAPI=2:
 # 2025-08-11  1.0.0    mrosiere Created
 # 2025-09-06  1.0.1    mrosiere Add package
 # 2026-08-02  1.0.2    mrosiere Add iobuf
+# 2026-08-24  1.0.3    mrosiere Add ibuf and obuf
 #-----------------------------------------------------------------------------
 
-name        : nanoxplore:target:ng_medium:1.0.2
+name        : nanoxplore:target:ng_medium:1.0.3
 description : Technology Cells for FPGA NG_MEDIUM from NanoXplore
 
 #=========================================
@@ -35,6 +36,8 @@ filesets:
       - hdl/generic/sync2dff.vhd
       - hdl/generic/sync2dffrn.vhd
       - hdl/generic/iobuf.vhd
+      - hdl/generic/obuf.vhd
+      - hdl/generic/ibuf.vhd
     file_type    : vhdlSource
     logical_name : asylum
 

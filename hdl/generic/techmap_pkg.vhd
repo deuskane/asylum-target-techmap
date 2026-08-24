@@ -22,6 +22,19 @@ component cgate is
     );
 end component cgate;
 
+component ibuf is
+  generic
+  (INPUT_VALUE_DISABLED : std_logic := '0' -- d_o value when input is disabled
+  ;INVERT_D_O           : std_logic := '0' -- Invert d_o value
+  ;INVERT_IE_I          : std_logic := '0' -- Invert ie_i value
+  );
+  port 
+  (buf_io   : inout std_logic -- I/O Buffer
+  ;d_o      : out   std_logic -- Output Data
+  ;ie_i     : in    std_logic -- Input Enable
+  );
+end component ibuf;
+
 component iobuf is
   generic
   (INPUT_VALUE_DISABLED : std_logic := '0' -- d_o value when input is disabled
@@ -38,6 +51,18 @@ component iobuf is
   ;ie_i     : in    std_logic -- Input Enable
   );
 end component iobuf;
+
+component obuf is
+  generic
+  (INVERT_D_I           : std_logic := '0' -- Invert d_i value
+  ;INVERT_OE_I          : std_logic := '0' -- Invert oe_i value
+  );
+  port 
+  (buf_io   : inout std_logic -- I/O Buffer
+  ;d_i      : in    std_logic -- Input Data
+  ;oe_i     : in    std_logic -- Output Enable
+  );
+end component obuf;
 
 component sync2dff is
   port   (
