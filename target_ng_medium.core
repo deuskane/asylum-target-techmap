@@ -17,9 +17,10 @@ CAPI=2:
 # 2025-09-06  1.0.1    mrosiere Add package
 # 2026-08-02  1.0.2    mrosiere Add iobuf
 # 2026-08-24  1.0.3    mrosiere Add ibuf and obuf
+# 2026-09-19  1.0.4    mrosiere Move package from generic to common
 #-----------------------------------------------------------------------------
 
-name        : nanoxplore:target:ng_medium:1.0.3
+name        : nanoxplore:target:ng_medium:1.0.4
 description : Technology Cells for FPGA NG_MEDIUM from NanoXplore
 
 #=========================================
@@ -30,7 +31,7 @@ filesets:
   hdl:
   #---------------------------------------
     files:
-      - hdl/generic/techmap_pkg.vhd
+      - hdl/common/techmap_pkg.vhd
       - hdl/ng_medium/cbufg.vhd
       - hdl/generic/cgate.vhd
       - hdl/generic/sync2dff.vhd
