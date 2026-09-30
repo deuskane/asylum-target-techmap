@@ -1,3 +1,5 @@
+[![CI](https://github.com/deuskane/asylum-target-techmap/actions/workflows/ci.yml/badge.svg)](https://github.com/deuskane/asylum-target-techmap/actions/workflows/ci.yml)
+
 # asylum-target-techmap
 
 Set of technology cells for the Asylum project, providing both generic (inferred) implementations and technology-specific implementations for various FPGA platforms.
