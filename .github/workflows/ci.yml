@@ -5,6 +5,12 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+jobs:
 #<GENERATE_BEGIN>
-# jobs:
+  noop:
+    name: No-op (CI temporarily disabled)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Empty workflow
+        run: echo "No job defined at this time."
 #<GENERATE_END>
