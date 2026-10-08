@@ -12,6 +12,9 @@
 -- Revisions  :
 -- Date        Version  Author   Description
 -- 2026-08-24  1.0      mrosiere Created
+-- 2026-10-05  1.1      mrosiere Drive 'Z' on buf_io : an undriven inout port
+--                               contributes its default value 'U' to the
+--                               resolved pad net in simulation
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -41,5 +44,8 @@ begin
   ie_i_int <= ie_i     when INVERT_IE_I = '0' else not ie_i;
 
   d_o      <= d_o_int  when (ie_i_int = '1') else INPUT_VALUE_DISABLED;
+
+  -- Input buffer : never drives the pad
+  buf_io   <= 'Z';
   
 end rtl;

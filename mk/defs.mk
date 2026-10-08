@@ -1,3 +1,3 @@
 FILE_CORE	?= target_generic.core
-TARGET          ?= lint
+TARGET          ?= sim_techmap
 TOOL		?= ghdl

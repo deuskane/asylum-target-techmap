@@ -1,3 +1,4 @@
-default : Default Target (DON'T RUN)
-lint    : Lint
+default      : Default Target (DON'T RUN)
+lint_generic : Lint (elaboration of every generic cell)
+sim_techmap  : Self-checking UVVM testbench of the generic cells
 
