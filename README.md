@@ -74,15 +74,15 @@ The Makefile works on `target_generic.core` (`mk/defs.mk`), which also holds the
 - CDC cells: `sync2dff`, `sync2dffrn` (2-FF synchronizers, without / with asynchronous reset)
 - I/O cells: `ibuf`, `obuf`, `iobuf` with generic-controlled inversion of data / enables and a configurable value when the input is disabled
 - Technology selection by FuseSoC flag, no source change in the consuming IPs
-- NG-MEDIUM variant: `cbufg` mapped on the `NX_WFG` primitive; all other cells shared with the generic core
+- NG-MEDIUM variant: `cbufg` mapped on the `NX_WFG` primitive, `cgate` on the `NX_CKS` clock switch; all other cells shared with the generic core
 
 ## Block Diagram
 
 Diagram: [doc/techmap.drawio](doc/techmap.drawio) (open with diagrams.net or the VS Code Draw.io extension).
 
 - `target_techmap.core` (`asylum:target:techmap`) chooses `target_ng_medium.core` when `TARGET_NANOXPLORE_NG_MEDIUM` is set, `target_generic.core` otherwise.
-- Both technology cores compile `hdl/common/techmap_pkg.vhd` and the shared cells of `hdl/generic/` (`cgate`, `sync2dff`, `sync2dffrn`, `ibuf`, `obuf`, `iobuf`).
-- Only `cbufg` differs: a wire in `hdl/generic/cbufg.vhd`, an `NX_WFG` instance in `hdl/ng_medium/cbufg.vhd`.
+- Both technology cores compile `hdl/common/techmap_pkg.vhd` and the shared cells of `hdl/generic/` (`sync2dff`, `sync2dffrn`, `ibuf`, `obuf`, `iobuf`).
+- `cbufg` and `cgate` differ: a wire and a latch + AND in `hdl/generic/`, an `NX_WFG` and an `NX_CKS` instance in `hdl/ng_medium/`.
 - No port is drawn: each cell has its own interface (see Top-Level).
 
 ## Top-Level
@@ -94,7 +94,8 @@ Library IP: there is no single top-level. Units compiled in library `asylum`:
 | `techmap_pkg` | package | [hdl/common/techmap_pkg.vhd](hdl/common/techmap_pkg.vhd) | Component declarations of all cells |
 | `cbufg` | entity | [hdl/generic/cbufg.vhd](hdl/generic/cbufg.vhd) | Global clock buffer, generic: `d_o <= d_i` |
 | `cbufg` | entity | [hdl/ng_medium/cbufg.vhd](hdl/ng_medium/cbufg.vhd) | Global clock buffer, NG-MEDIUM: `NX_WFG` instance |
-| `cgate` | entity | [hdl/generic/cgate.vhd](hdl/generic/cgate.vhd) | Clock gate (latch + AND) |
+| `cgate` | entity | [hdl/generic/cgate.vhd](hdl/generic/cgate.vhd) | Clock gate, generic: latch + AND |
+| `cgate` | entity | [hdl/ng_medium/cgate.vhd](hdl/ng_medium/cgate.vhd) | Clock gate, NG-MEDIUM: `NX_CKS` instance |
 | `sync2dff` | entity | [hdl/generic/sync2dff.vhd](hdl/generic/sync2dff.vhd) | 2-FF synchronizer |
 | `sync2dffrn` | entity | [hdl/generic/sync2dffrn.vhd](hdl/generic/sync2dffrn.vhd) | 2-FF synchronizer with asynchronous reset |
 | `ibuf` | entity | [hdl/generic/ibuf.vhd](hdl/generic/ibuf.vhd) | Input buffer |
@@ -194,7 +195,8 @@ The consuming core only declares `asylum:target:techmap` in its `depend:` list; 
 | [hdl/common/techmap_pkg.vhd](hdl/common/techmap_pkg.vhd) | `techmap_pkg` | package | Components (both cores) |
 | [hdl/generic/cbufg.vhd](hdl/generic/cbufg.vhd) | `cbufg` | entity | Generic core only |
 | [hdl/ng_medium/cbufg.vhd](hdl/ng_medium/cbufg.vhd) | `cbufg` | entity | NG-MEDIUM core only (library `nx`) |
-| [hdl/generic/cgate.vhd](hdl/generic/cgate.vhd) | `cgate` | entity | Both cores |
+| [hdl/generic/cgate.vhd](hdl/generic/cgate.vhd) | `cgate` | entity | Generic core only |
+| [hdl/ng_medium/cgate.vhd](hdl/ng_medium/cgate.vhd) | `cgate` | entity | NG-MEDIUM core only (library `nx`) |
 | [hdl/generic/sync2dff.vhd](hdl/generic/sync2dff.vhd) | `sync2dff` | entity | Both cores |
 | [hdl/generic/sync2dffrn.vhd](hdl/generic/sync2dffrn.vhd) | `sync2dffrn` | entity | Both cores |
 | [hdl/generic/ibuf.vhd](hdl/generic/ibuf.vhd) | `ibuf` | entity | Both cores |
@@ -210,7 +212,12 @@ The consuming core only declares `asylum:target:techmap` in its `depend:` list; 
 
 ### cgate
 
-`cke = cke_i or dft_te_i` is captured by a latch transparent while `clk_i = '0'`, and `clk_o = clk_i and cke_l`: the enable can only change while the clock is low, so `clk_o` has no glitch.
+| Core | File | Implementation |
+|------|------|----------------|
+| `asylum:target:generic` | hdl/generic/cgate.vhd | `cke = cke_i or dft_te_i` is captured by a latch transparent while `clk_i = '0'`, and `clk_o = clk_i and cke_l`: the enable can only change while the clock is low, so `clk_o` has no glitch |
+| `nanoxplore:target:ng_medium` | hdl/ng_medium/cgate.vhd | `NX_CKS` clock switch (`nx.nxPackage`, `ck_edge => '0'`) with `CKI = clk_i`, `CMD = cke_i or dft_te_i`, `CKO = clk_o`: glitch-free gating inside the clock network, the cell NanoXplore recommends to gate a clock on NG-MEDIUM / NG-LARGE (a latch + AND would leave the clock network and build the latch in the fabric) |
+
+In both versions `cke_i` must come from the `clk_i` domain.
 
 ### sync2dff / sync2dffrn
 
@@ -277,7 +284,7 @@ The CI workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the 
 No dedicated synthesis target: the cells are synthesized inside the consuming designs.
 
 - **Technology selection**: the `default` target of `target_techmap.core` uses the filesets `"TARGET_NANOXPLORE_NG_MEDIUM ? (target_nanoxplore_ng_medium)"` and `"!TARGET_NANOXPLORE_NG_MEDIUM ? (target_generic)"`. Without the flag the generic cells are used; to map on NG-MEDIUM, set the flag for the run, e.g. `fusesoc run --flag TARGET_NANOXPLORE_NG_MEDIUM ...` or `flags: {TARGET_NANOXPLORE_NG_MEDIUM: true}` in the target of the consuming core. No core of the project sets this flag today.
-- **NG-MEDIUM**: `hdl/ng_medium/cbufg.vhd` needs library `nx` (`nxPackage`), supplied by the NanoXplore tools; it is not a FuseSoC dependency.
+- **NG-MEDIUM**: `hdl/ng_medium/cbufg.vhd` and `hdl/ng_medium/cgate.vhd` need library `nx` (`nxPackage`), supplied by the NanoXplore tools; it is not a FuseSoC dependency.
 - **Generic cells**: plain RTL without simulation-only code. `cgate` describes a latch (inferred as such), `sync2dff` / `sync2dffrn` carry no synthesis attribute (no `ASYNC_REG`-like constraint), and the I/O buffers rely on `'Z'` assignments, so they must end up at the chip / FPGA top level to map on pads.
 
 ## Design Notes
@@ -311,7 +318,8 @@ asylum-target-techmap/
 │   │   ├── sync2dff.vhd
 │   │   └── sync2dffrn.vhd
 │   └── ng_medium/
-│       └── cbufg.vhd
+│       ├── cbufg.vhd
+│       └── cgate.vhd
 ├── sim/
 │   └── src/
 │       ├── tb_techmap.vhd      # Self-checking UVVM testbench (sim_techmap)

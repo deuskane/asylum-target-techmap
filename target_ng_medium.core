@@ -34,7 +34,7 @@ filesets:
     files:
       - hdl/common/techmap_pkg.vhd
       - hdl/ng_medium/cbufg.vhd
-      - hdl/generic/cgate.vhd
+      - hdl/ng_medium/cgate.vhd
       - hdl/generic/sync2dff.vhd
       - hdl/generic/sync2dffrn.vhd
       - hdl/generic/iobuf.vhd
