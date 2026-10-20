@@ -247,6 +247,8 @@ This IP has no software-visible registers.
 |--------|----------|-------------|
 | `default` | *(none)* | Default Target (DON'T RUN): `hdl` fileset only |
 | `lint_generic` | `tb_dummy` | Lint (elaboration of every generic cell): `hdl` + `sim` filesets, GHDL with `-fsynopsys` |
+| `lint_ghdl` | `techmap_synth_top` | Lint: GHDL `-Wall` analysis and elaboration (empty simulation) of every generic cell in a wrapper with all ports connected (`syn/ghdl/techmap_synth_top.vhd`, VHDL-93 like the cells) |
+| `lint_ghdl_synth` | `techmap_synth_top` | Synthesis check: `lint_ghdl`, then `ghdl --synth -Wall` of 3 configurations (`syn/ghdl/ghdl_synth.sh`: without `cgate`, without `cgate` with every I/O buffer generic at `'1'`, every cell with `--latches` since `cgate` latches its clock enable by design), fails on a synthesis error or an inferred latch |
 | `sim_techmap` | `tb_techmap` | Self-checking UVVM testbench of the generic cells: `hdl` + `sim_uvvm` filesets (depends on `bitvis:verification:uvvm`), GHDL `-Wall -frelaxed` |
 
 `target_ng_medium.core` and `target_techmap.core` only have a `default` target (DON'T RUN).
@@ -260,7 +262,9 @@ make help                 # variables, rules and target list (mk/targets.txt)
 make sim_techmap          # run the UVVM testbench (log in log/)
 make lint_generic         # analyze / elaborate / run tb_dummy
 make nonreg_sim           # run every sim_* target (sim_techmap)
-make nonreg_lint          # run every lint_* target (lint_generic)
+make lint_ghdl            # GHDL -Wall lint
+make lint_ghdl_synth      # GHDL -Wall lint + ghdl --synth -Wall check
+make nonreg_lint          # run every lint_* target (lint_generic, lint_ghdl, lint_ghdl_synth)
 make clean                # remove build/ and log/
 ```
 
@@ -274,7 +278,7 @@ The CI workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the 
 
 ## Synthesis
 
-No dedicated synthesis target: the cells are synthesized inside the consuming designs.
+No vendor synthesis target: the cells are synthesized inside the consuming designs (`lint_ghdl_synth` checks the generic cells with `ghdl --synth`, see [Targets](#targets); the NG-MEDIUM `cbufg` needs library `nx` and is not checked).
 
 - **Technology selection**: the `default` target of `target_techmap.core` uses the filesets `"TARGET_NANOXPLORE_NG_MEDIUM ? (target_nanoxplore_ng_medium)"` and `"!TARGET_NANOXPLORE_NG_MEDIUM ? (target_generic)"`. Without the flag the generic cells are used; to map on NG-MEDIUM, set the flag for the run, e.g. `fusesoc run --flag TARGET_NANOXPLORE_NG_MEDIUM ...` or `flags: {TARGET_NANOXPLORE_NG_MEDIUM: true}` in the target of the consuming core. No core of the project sets this flag today.
 - **NG-MEDIUM**: `hdl/ng_medium/cbufg.vhd` needs library `nx` (`nxPackage`), supplied by the NanoXplore tools; it is not a FuseSoC dependency.
@@ -316,6 +320,9 @@ asylum-target-techmap/
 │   └── src/
 │       ├── tb_techmap.vhd      # Self-checking UVVM testbench (sim_techmap)
 │       └── tb_dummy.vhd        # Elaboration testbench (lint_generic)
+├── syn/ghdl/
+│   ├── techmap_synth_top.vhd   # Lint / synthesis check top (every generic cell)
+│   └── ghdl_synth.sh           # ghdl --synth check (post_run hook of lint_ghdl_synth)
 └── .github/workflows/ci.yml    # CI (sim_techmap job)
 ```
 

@@ -1,4 +1,6 @@
-default      : Default Target (DON'T RUN)
-lint_generic : Lint (elaboration of every generic cell)
-sim_techmap  : Self-checking UVVM testbench of the generic cells
+default         : Default Target (DON'T RUN)
+lint_generic    : Lint (elaboration of every generic cell)
+lint_ghdl       : Lint with GHDL (-Wall analysis and elaboration of techmap_synth_top)
+lint_ghdl_synth : Synthesis check, ghdl --synth -Wall of techmap_synth_top (3 configurations)
+sim_techmap     : Self-checking UVVM testbench of the generic cells
 
