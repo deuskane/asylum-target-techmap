@@ -36,6 +36,20 @@ architecture rtl of sync2dffrn is
 
   constant WIDTH : natural := 2;
   signal   q_r   : std_logic_vector(WIDTH-1 downto 0);  -- Synchronization chain
+
+  -- Synthesis attributes of the synchronization chain: keep both flip-flops
+  -- (no shift register extraction, no retiming, duplication or merging with
+  -- other logic) and place them close together. The path to q_r(0) is
+  -- asynchronous: declare it as a false path in the design constraints.
+  --   ASYNC_REG     : Xilinx Vivado / ISE
+  --   SHREG_EXTRACT : Xilinx Vivado / XST (no SRL inference)
+  --   syn_preserve  : Synplify, NanoXplore NXmap (preserve registers)
+  attribute ASYNC_REG     : string;
+  attribute SHREG_EXTRACT : string;
+  attribute syn_preserve  : boolean;
+  attribute ASYNC_REG     of q_r : signal is "TRUE";
+  attribute SHREG_EXTRACT of q_r : signal is "NO";
+  attribute syn_preserve  of q_r : signal is true;
   
 begin
 

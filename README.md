@@ -216,6 +216,8 @@ The consuming core only declares `asylum:target:techmap` in its `depend:` list; 
 
 2-bit shift register `q_r` clocked on the rising edge of `clk_i`, `q_o = q_r(1)`. `sync2dffrn` clears the chain asynchronously when `arst_b_i = '0'`; `sync2dff` has no reset.
 
+`q_r` carries synthesis attributes so that the two flip-flops are kept as such (no SRL extraction, no retiming, duplication or merging) and placed close together: `ASYNC_REG = "TRUE"` (Xilinx Vivado / ISE), `SHREG_EXTRACT = "NO"` (Xilinx Vivado / XST), `syn_preserve = true` (Synplify and NanoXplore NXmap, which documents `syn_preserve` for registers). Both technology cores use these files, so the attributes also apply on NG-MEDIUM. The input `d_i` is asynchronous: the consuming design must declare the path to the first flip-flop (`q_r(0)`) as a false path (or constrain it with a max delay) in its timing constraints.
+
 ### ibuf / obuf / iobuf
 
 | Cell | Pad drive | Input path |
@@ -278,7 +280,7 @@ No dedicated synthesis target: the cells are synthesized inside the consuming de
 
 - **Technology selection**: the `default` target of `target_techmap.core` uses the filesets `"TARGET_NANOXPLORE_NG_MEDIUM ? (target_nanoxplore_ng_medium)"` and `"!TARGET_NANOXPLORE_NG_MEDIUM ? (target_generic)"`. Without the flag the generic cells are used; to map on NG-MEDIUM, set the flag for the run, e.g. `fusesoc run --flag TARGET_NANOXPLORE_NG_MEDIUM ...` or `flags: {TARGET_NANOXPLORE_NG_MEDIUM: true}` in the target of the consuming core. No core of the project sets this flag today.
 - **NG-MEDIUM**: `hdl/ng_medium/cbufg.vhd` needs library `nx` (`nxPackage`), supplied by the NanoXplore tools; it is not a FuseSoC dependency.
-- **Generic cells**: plain RTL without simulation-only code. `cgate` describes a latch (inferred as such), `sync2dff` / `sync2dffrn` carry no synthesis attribute (no `ASYNC_REG`-like constraint), and the I/O buffers rely on `'Z'` assignments, so they must end up at the chip / FPGA top level to map on pads.
+- **Generic cells**: plain RTL without simulation-only code. `cgate` describes a latch (inferred as such), `sync2dff` / `sync2dffrn` carry `ASYNC_REG`, `SHREG_EXTRACT` and `syn_preserve` attributes on their chain (see HDL Modules), the false path on `d_i` is left to the consuming design, and the I/O buffers rely on `'Z'` assignments, so they must end up at the chip / FPGA top level to map on pads.
 
 ## Design Notes
 
