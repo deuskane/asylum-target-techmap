@@ -63,13 +63,22 @@ filesets:
       - bitvis:verification:uvvm
 
   #---------------------------------------
-  # Lint Files (post_run hook of lint_ghdl_synth)
+  syn:
   #---------------------------------------
-  files_lint:
-    files:
-      - syn/ghdl/techmap_synth_top.vhd
-      - syn/ghdl/ghdl_synth.sh : {file_type : user, copyto : ghdl_synth.sh}
-    file_type : vhdlSource
+    files        :
+      - syn/techmap_wrapper.vhd
+    file_type    : vhdlSource
+    logical_name : asylum
+
+  #---------------------------------------
+  # ghdl_synth.sh / ghdl_synth.mk (pre_run hook of lint_ghdl_synth_*) of
+  # asylum:utils:generators, not in lint_ghdl : the dependencies of
+  # generators (fifo, ram, pkg) are VHDL-2008, lint_ghdl checks the cells
+  # in VHDL-93
+  #---------------------------------------
+  syn_ghdl:
+    depend       :
+      - ">=asylum:utils:generators:2.8.0"
 
 #=========================================
 targets:
@@ -99,31 +108,61 @@ targets:
   #---------------------------------------
   # Lint : -Wall analysis and elaboration (empty simulation)
   #---------------------------------------
-  lint_ghdl :
+  lint_ghdl : &lint_ghdl
     << : *default
-    description     : Lint with GHDL (-Wall analysis and elaboration of techmap_synth_top)
-    toplevel        : techmap_synth_top
-    filesets_append : [files_lint]
+    description     : Lint with GHDL (-Wall analysis and elaboration of techmap_wrapper)
+    toplevel        : asylum.techmap_wrapper
+    filesets_append : [syn]
     default_tool    : ghdl
     tools :
       ghdl :
         analyze_options : ["-Wall"]
 
   #---------------------------------------
-  # Synthesis check : lint_ghdl, then ghdl --synth -Wall of techmap_synth_top
-  # for each configuration of syn/ghdl/ghdl_synth.sh (post_run hook)
+  # Synthesis check : -Wall analysis, ghdl --synth -Wall and elaboration
+  # (no simulation) of techmap_wrapper with the generics of the target.
+  # The pre_run hook (ghdl_synth.sh of asylum:utils:generators) adds
+  # ghdl_synth.mk to the edalize Makefile.
+  # FuseSoC merges tools in depth : analyze_options comes from lint_ghdl.
   #---------------------------------------
-  lint_ghdl_synth :
-    << : *default
-    description     : Synthesis check, ghdl --synth -Wall of techmap_synth_top (3 configurations)
-    toplevel        : techmap_synth_top
-    filesets_append : [files_lint]
-    default_tool    : ghdl
+  lint_ghdl_synth_no_cgate : &lint_ghdl_synth
+    << : *lint_ghdl
+    description     : Synthesis check of techmap_wrapper, without cgate
+    filesets_append : [syn, syn_ghdl]
+    parameters      :
+      - WITH_CGATE=false
     tools :
       ghdl :
-        analyze_options : ["-Wall"]
+        run_options     : ["--no-run"]
     hooks :
-      post_run : [ghdl_synth]
+      pre_run : [ghdl_synth]
+
+  #---------------------------------------
+  lint_ghdl_synth_no_cgate_inverted :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of techmap_wrapper, without cgate, I/O buffer generics at 1
+    parameters      :
+      - WITH_CGATE=false
+      - INPUT_VALUE_DISABLED=1
+      - INVERT_D_I=1
+      - INVERT_D_O=1
+      - INVERT_OE_I=1
+      - INVERT_IE_I=1
+
+  #---------------------------------------
+  # cgate latches its clock enable by design : every cell, ghdl --synth
+  # with --latches (GHDL_SYNTH_OPTIONS added by ghdl_synth_latches)
+  #---------------------------------------
+  lint_ghdl_synth_cgate_latch :
+    << : *lint_ghdl
+    description     : Synthesis check of techmap_wrapper, every cell, latches allowed (cgate)
+    filesets_append : [syn, syn_ghdl]
+    tools :
+      ghdl :
+        run_options     : ["--no-run"]
+    hooks :
+      pre_run : [ghdl_synth, ghdl_synth_latches]
 
   #---------------------------------------
   sim_techmap:
@@ -142,7 +181,56 @@ scripts:
 #=========================================
 
   #---------------------------------------
-  # Hook of lint_ghdl_synth (cwd = work_root)
+  # pre_run hook of lint_ghdl_synth_* (cwd = work_root)
   #---------------------------------------
   ghdl_synth :
     cmd : [bash, ghdl_synth.sh]
+
+  #---------------------------------------
+  # pre_run hook of lint_ghdl_synth_cgate_latch : ghdl --synth --latches
+  #---------------------------------------
+  ghdl_synth_latches :
+    cmd : [sh, -c, "echo GHDL_SYNTH_OPTIONS=--latches >> Makefile"]
+
+#=========================================
+parameters :
+#=========================================
+
+  #---------------------------------------
+  # Generics of techmap_wrapper (lint_ghdl_synth_*)
+  #---------------------------------------
+  WITH_CGATE :
+    description : true, cgate instantiated (it latches its clock enable)
+    datatype    : bool
+    default     : true
+    paramtype   : generic
+
+  INPUT_VALUE_DISABLED :
+    description : I/O buffers, input value when disabled (0 / 1)
+    datatype    : int
+    default     : 0
+    paramtype   : generic
+
+  INVERT_D_I :
+    description : I/O buffers, invert d_i (0 / 1)
+    datatype    : int
+    default     : 0
+    paramtype   : generic
+
+  INVERT_D_O :
+    description : I/O buffers, invert d_o (0 / 1)
+    datatype    : int
+    default     : 0
+    paramtype   : generic
+
+  INVERT_OE_I :
+    description : I/O buffers, invert oe_i (0 / 1)
+    datatype    : int
+    default     : 0
+    paramtype   : generic
+
+  INVERT_IE_I :
+    description : I/O buffers, invert ie_i (0 / 1)
+    datatype    : int
+    default     : 0
+    paramtype   : generic

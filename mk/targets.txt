@@ -1,6 +1,8 @@
-default         : Default Target (DON'T RUN)
-lint_generic    : Lint (elaboration of every generic cell)
-lint_ghdl       : Lint with GHDL (-Wall analysis and elaboration of techmap_synth_top)
-lint_ghdl_synth : Synthesis check, ghdl --synth -Wall of techmap_synth_top (3 configurations)
-sim_techmap     : Self-checking UVVM testbench of the generic cells
+default                           : Default Target (DON'T RUN)
+lint_generic                      : Lint (elaboration of every generic cell)
+lint_ghdl                         : Lint with GHDL (-Wall analysis and elaboration of techmap_wrapper)
+lint_ghdl_synth_cgate_latch       : Synthesis check of techmap_wrapper, every cell, latches allowed (cgate)
+lint_ghdl_synth_no_cgate          : Synthesis check of techmap_wrapper, without cgate
+lint_ghdl_synth_no_cgate_inverted : Synthesis check of techmap_wrapper, without cgate, I/O buffer generics at 1
+sim_techmap                       : Self-checking UVVM testbench of the generic cells
 
