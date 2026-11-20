@@ -84,6 +84,13 @@ filesets:
     depend       :
       - asylum:utils:ghdl_synth
 
+  #---------------------------------------
+  syn_yosys:
+  #---------------------------------------
+    # yosys_synth.sh / yosys_synth.mk / yosys_synth.py (pre_run hook of syn_*)
+    depend       :
+      - asylum:utils:yosys_synth
+
 #=========================================
 targets:
 #=========================================
@@ -154,6 +161,15 @@ targets:
       - INVERT_IE_I=1
 
   #---------------------------------------
+  lint_ghdl_synth_sync :
+  #---------------------------------------
+    << : *lint_ghdl_synth
+    description     : Synthesis check of techmap_wrapper, cbufg and synchronizers (without cgate and I/O buffers)
+    parameters      :
+      - WITH_CGATE=false
+      - WITH_IO_BUFFERS=false
+
+  #---------------------------------------
   # cgate latches its clock enable by design : every cell, ghdl --synth
   # with --latches (GHDL_SYNTH_OPTIONS added by ghdl_synth_latches)
   #---------------------------------------
@@ -165,6 +181,28 @@ targets:
         run_options     : ["--no-run"]
     hooks :
       pre_run : [ghdl_synth, ghdl_synth_latches]
+
+  #---------------------------------------
+  # Synthesis : size of techmap_wrapper with the generics of the target,
+  # Xilinx Artix-7 (LUT, FF, BRAM, DSP) and sky130 (area), by Yosys and
+  # its GHDL plugin. Same configuration as lint_ghdl_synth_sync : the
+  # Artix-7 flow (synth_xilinx -noiopad) rejects tri-states (ibuf, obuf,
+  # iobuf) and the GHDL plugin rejects latches (cgate).
+  # The pre_run hook (yosys_synth.sh of asylum:utils:yosys_synth) adds
+  # yosys_synth.mk to the edalize Makefile.
+  #---------------------------------------
+  syn_sync :
+    << : *lint_ghdl
+    description     : Synthesis (Artix-7, sky130) of techmap_wrapper, cbufg and synchronizers (without cgate and I/O buffers)
+    filesets_append : [syn_yosys]
+    parameters      :
+      - WITH_CGATE=false
+      - WITH_IO_BUFFERS=false
+    tools :
+      ghdl :
+        run_options     : ["--no-run"]
+    hooks :
+      pre_run : [yosys_synth]
 
   #---------------------------------------
   # tb_techmap : one configuration (every generic combination of the I/O
@@ -256,6 +294,12 @@ scripts:
   ghdl_synth_latches :
     cmd : [sh, -c, "echo GHDL_SYNTH_OPTIONS=--latches >> Makefile"]
 
+  #---------------------------------------
+  # pre_run hook of syn_* (cwd = work_root)
+  #---------------------------------------
+  yosys_synth :
+    cmd : [bash, yosys_synth.sh]
+
 #=========================================
 parameters :
 #=========================================
@@ -271,6 +315,12 @@ parameters :
   #---------------------------------------
   WITH_CGATE :
     description : true, cgate instantiated (it latches its clock enable)
+    datatype    : bool
+    default     : true
+    paramtype   : generic
+
+  WITH_IO_BUFFERS :
+    description : true, ibuf, obuf and iobuf instantiated (they drive Z on their pad)
     datatype    : bool
     default     : true
     paramtype   : generic
