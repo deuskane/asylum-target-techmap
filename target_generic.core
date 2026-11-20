@@ -57,10 +57,21 @@ filesets:
   sim_uvvm:
   #---------------------------------------
     files:
-      - sim/src/tb_techmap.vhd
+      - sim/techmap/tb_techmap_bfm_pkg.vhd
+      - sim/techmap/tb_techmap_cbufg_pkg.vhd
+      - sim/techmap/tb_techmap_cgate_pkg.vhd
+      - sim/techmap/tb_techmap_sync2dff_pkg.vhd
+      - sim/techmap/tb_techmap_sync2dffrn_pkg.vhd
+      - sim/techmap/tb_techmap_ibuf_pkg.vhd
+      - sim/techmap/tb_techmap_obuf_pkg.vhd
+      - sim/techmap/tb_techmap_iobuf_pkg.vhd
+      - sim/techmap/tb_techmap_tests_pkg.vhd
+      - sim/techmap/tb_techmap.vhd
     file_type : vhdlSource-2008
     depend       :
       - bitvis:verification:uvvm
+      # string_pkg list_length / list_item (TESTS_LIST)
+      - ">=asylum:utils:pkg:1.10.0"
 
   #---------------------------------------
   syn:
@@ -156,16 +167,78 @@ targets:
       pre_run : [ghdl_synth, ghdl_synth_latches]
 
   #---------------------------------------
-  sim_techmap:
+  # tb_techmap : one configuration (every generic combination of the I/O
+  # buffers is instantiated), scenarios chosen at run time (TESTS_LIST,
+  # empty : build and elaboration only) : sim_techmap (build only) and
+  # one sim_techmap_<test> target per scenario (one per cell).
   #---------------------------------------
+  sim_techmap: &sim_techmap
     << : *default
-    description     : Self-checking UVVM testbench of the generic cells
+    description     : Self-checking UVVM testbench of the generic cells - build only (scenarios of TESTS_LIST)
     toplevel        : tb_techmap
     filesets_append :
       - sim_uvvm
+    parameters      :
+      - TESTS_LIST
     tools :
       ghdl :
         analyze_options : ["-Wall","-frelaxed"]
+
+  #---------------------------------------
+  sim_techmap_cbufg:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - cbufg, d_o = d_i and clock without delay
+    parameters      :
+      - TESTS_LIST=cbufg
+
+  #---------------------------------------
+  sim_techmap_cgate:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - cgate, clock gating glitch-free, enable latched while the clock is low, test enable
+    parameters      :
+      - TESTS_LIST=cgate
+
+  #---------------------------------------
+  sim_techmap_sync2dff:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - sync2dff, 2-edge latency, 1-cycle pulse
+    parameters      :
+      - TESTS_LIST=sync2dff
+
+  #---------------------------------------
+  sim_techmap_sync2dffrn:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - sync2dffrn, reset held, 2-edge latency, asynchronous reset of the chain
+    parameters      :
+      - TESTS_LIST=sync2dffrn
+
+  #---------------------------------------
+  sim_techmap_ibuf:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - ibuf, every generic combination, pad never driven
+    parameters      :
+      - TESTS_LIST=ibuf
+
+  #---------------------------------------
+  sim_techmap_obuf:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - obuf, every generic combination, Z when the output is disabled
+    parameters      :
+      - TESTS_LIST=obuf
+
+  #---------------------------------------
+  sim_techmap_iobuf:
+  #---------------------------------------
+    << : *sim_techmap
+    description     : Self-checking UVVM testbench of the generic cells - iobuf, every generic combination, loopback, Z when the output is disabled
+    parameters      :
+      - TESTS_LIST=iobuf
 
 #=========================================
 scripts:
@@ -186,6 +259,12 @@ scripts:
 #=========================================
 parameters :
 #=========================================
+
+  TESTS_LIST :
+    description : Scenarios run in sequence, separated by ',' (names in sim/techmap/tb_techmap_tests_pkg.vhd), empty = build only
+    datatype    : str
+    default     : ""
+    paramtype   : generic
 
   #---------------------------------------
   # Generics of techmap_wrapper (lint_ghdl_synth_*)

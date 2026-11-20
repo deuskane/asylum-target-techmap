@@ -4,5 +4,12 @@ lint_ghdl                         : Lint with GHDL (-Wall analysis and elaborati
 lint_ghdl_synth_cgate_latch       : Synthesis check of techmap_wrapper, every cell, latches allowed (cgate)
 lint_ghdl_synth_no_cgate          : Synthesis check of techmap_wrapper, without cgate
 lint_ghdl_synth_no_cgate_inverted : Synthesis check of techmap_wrapper, without cgate, I/O buffer generics at 1
-sim_techmap                       : Self-checking UVVM testbench of the generic cells
+sim_techmap                       : Self-checking UVVM testbench of the generic cells - build only (scenarios of TESTS_LIST)
+sim_techmap_cbufg                 : Self-checking UVVM testbench of the generic cells - cbufg, d_o = d_i and clock without delay
+sim_techmap_cgate                 : Self-checking UVVM testbench of the generic cells - cgate, clock gating glitch-free, enable latched while the clock is low, test enable
+sim_techmap_ibuf                  : Self-checking UVVM testbench of the generic cells - ibuf, every generic combination, pad never driven
+sim_techmap_iobuf                 : Self-checking UVVM testbench of the generic cells - iobuf, every generic combination, loopback, Z when the output is disabled
+sim_techmap_obuf                  : Self-checking UVVM testbench of the generic cells - obuf, every generic combination, Z when the output is disabled
+sim_techmap_sync2dff              : Self-checking UVVM testbench of the generic cells - sync2dff, 2-edge latency, 1-cycle pulse
+sim_techmap_sync2dffrn            : Self-checking UVVM testbench of the generic cells - sync2dffrn, reset held, 2-edge latency, asynchronous reset of the chain
 

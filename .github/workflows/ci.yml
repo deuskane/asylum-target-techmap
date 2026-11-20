@@ -12,4 +12,39 @@ jobs:
     with:
       name: sim_techmap
 
+  sim_techmap_cbufg:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_cbufg
+
+  sim_techmap_cgate:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_cgate
+
+  sim_techmap_ibuf:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_ibuf
+
+  sim_techmap_iobuf:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_iobuf
+
+  sim_techmap_obuf:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_obuf
+
+  sim_techmap_sync2dff:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_sync2dff
+
+  sim_techmap_sync2dffrn:
+    uses: deuskane/asylum-ci/.github/workflows/vhdl-ci.yml@main
+    with:
+      name: sim_techmap_sync2dffrn
+
 #<GENERATE_END>
