@@ -1,0 +1,11 @@
+{ "signal": [
+  { "name": "clk_i",    "wave": "l.h.l.h.l.h.l.h.l.h.l.h." },
+  { "name": "cke_i",    "wave": "0......1.......0...10..." },
+  { "name": "cke_l",    "wave": "0.......1.......0......." },
+  { "name": "clk_o",    "wave": "l.........h.l.h.l......." },
+  {},
+  { "name": "phase",    "wave": "4.5.4.5.4.5.4.5.4.5.4.5.", "data": ["open", "closed", "open", "closed", "open", "closed", "open", "closed", "open", "closed", "open", "closed"] }
+  ],
+  "head": { "text": "cgate : cke_i latched while clk_i is low (latch open) ; a change or a glitch while clk_i is high waits for the low phase : clk_o has full pulses only" },
+  "config": { "hscale": 1 }
+}

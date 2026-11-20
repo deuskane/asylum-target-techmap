@@ -6,7 +6,7 @@
 -- Author     : Mathieu Rosiere
 -------------------------------------------------------------------------------
 -- Description:
--- Wrapper (lint_ghdl, lint_ghdl_synth_*) : one instance of each
+-- Wrapper (lint_ghdl, lint_ghdl_synth_*, syn_*) : one instance of each
 -- generic cell of techmap_pkg (cbufg, cgate, sync2dff, sync2dffrn, ibuf, obuf,
 -- iobuf), every port of every cell on a top-level port (tb_dummy ties the
 -- inputs to '0' and leaves the outputs open : nothing would be synthesized).
@@ -15,6 +15,9 @@
 -- (cgate_clk_o tied to '0') for the synthesis checks without latch.
 -- The std_logic generics of the I/O buffers are natural (0 / 1) in the
 -- wrapper : a FuseSoC parameter value cannot contain a quote ('1').
+-- The I/O buffers drive 'Z' (tri-state) : WITH_IO_BUFFERS = false removes
+-- them (outputs tied to '0', pads not driven) for the Yosys synthesis
+-- (syn_*), whose Artix-7 flow has no I/O pad.
 -------------------------------------------------------------------------------
 -- Copyright (c) 2026
 -------------------------------------------------------------------------------
@@ -23,6 +26,7 @@
 -- 2026-10-20  1.0      mrosiere Created
 -- 2026-10-24  1.1      mrosiere Was techmap_synth_top, library asylum
 --                               I/O buffer generics : natural (0 / 1)
+-- 2026-11-20  1.2      mrosiere WITH_IO_BUFFERS (syn_*, no tri-state)
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -33,6 +37,7 @@ use     asylum.techmap_pkg.all;
 entity techmap_wrapper is
   generic
   (WITH_CGATE           : boolean   := true -- false : no cgate instance
+  ;WITH_IO_BUFFERS      : boolean   := true -- false : no ibuf, obuf, iobuf instance
   ;INPUT_VALUE_DISABLED : natural range 0 to 1 := 0 -- ibuf, iobuf
   ;INVERT_D_I           : natural range 0 to 1 := 0 -- obuf, iobuf
   ;INVERT_D_O           : natural range 0 to 1 := 0 -- ibuf, iobuf
@@ -122,43 +127,52 @@ begin
   ,q_o      => sync2dffrn_q_o
   );
 
-  ins_ibuf : ibuf
-  generic map
-  (INPUT_VALUE_DISABLED => to_sl(INPUT_VALUE_DISABLED)
-  ,INVERT_D_O           => to_sl(INVERT_D_O)
-  ,INVERT_IE_I          => to_sl(INVERT_IE_I)
-  )
-  port map
-  (buf_io   => ibuf_buf_io
-  ,d_o      => ibuf_d_o
-  ,ie_i     => ibuf_ie_i
-  );
+  gen_io_buffers : if WITH_IO_BUFFERS = true
+  generate
+    ins_ibuf : ibuf
+    generic map
+    (INPUT_VALUE_DISABLED => to_sl(INPUT_VALUE_DISABLED)
+    ,INVERT_D_O           => to_sl(INVERT_D_O)
+    ,INVERT_IE_I          => to_sl(INVERT_IE_I)
+    )
+    port map
+    (buf_io   => ibuf_buf_io
+    ,d_o      => ibuf_d_o
+    ,ie_i     => ibuf_ie_i
+    );
 
-  ins_obuf : obuf
-  generic map
-  (INVERT_D_I           => to_sl(INVERT_D_I)
-  ,INVERT_OE_I          => to_sl(INVERT_OE_I)
-  )
-  port map
-  (buf_io   => obuf_buf_io
-  ,d_i      => obuf_d_i
-  ,oe_i     => obuf_oe_i
-  );
+    ins_obuf : obuf
+    generic map
+    (INVERT_D_I           => to_sl(INVERT_D_I)
+    ,INVERT_OE_I          => to_sl(INVERT_OE_I)
+    )
+    port map
+    (buf_io   => obuf_buf_io
+    ,d_i      => obuf_d_i
+    ,oe_i     => obuf_oe_i
+    );
 
-  ins_iobuf : iobuf
-  generic map
-  (INPUT_VALUE_DISABLED => to_sl(INPUT_VALUE_DISABLED)
-  ,INVERT_D_I           => to_sl(INVERT_D_I)
-  ,INVERT_D_O           => to_sl(INVERT_D_O)
-  ,INVERT_OE_I          => to_sl(INVERT_OE_I)
-  ,INVERT_IE_I          => to_sl(INVERT_IE_I)
-  )
-  port map
-  (buf_io   => iobuf_buf_io
-  ,d_i      => iobuf_d_i
-  ,d_o      => iobuf_d_o
-  ,oe_i     => iobuf_oe_i
-  ,ie_i     => iobuf_ie_i
-  );
+    ins_iobuf : iobuf
+    generic map
+    (INPUT_VALUE_DISABLED => to_sl(INPUT_VALUE_DISABLED)
+    ,INVERT_D_I           => to_sl(INVERT_D_I)
+    ,INVERT_D_O           => to_sl(INVERT_D_O)
+    ,INVERT_OE_I          => to_sl(INVERT_OE_I)
+    ,INVERT_IE_I          => to_sl(INVERT_IE_I)
+    )
+    port map
+    (buf_io   => iobuf_buf_io
+    ,d_i      => iobuf_d_i
+    ,d_o      => iobuf_d_o
+    ,oe_i     => iobuf_oe_i
+    ,ie_i     => iobuf_ie_i
+    );
+  end generate;
+
+  gen_io_buffers_b : if WITH_IO_BUFFERS = false
+  generate
+    ibuf_d_o  <= '0';
+    iobuf_d_o <= '0';
+  end generate;
 
 end rtl;
