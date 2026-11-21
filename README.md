@@ -219,14 +219,14 @@ Figures of the `syn_*` target (`make nonreg_syn`, see [Targets](#targets)): [syn
 
 | Configuration | LUT¹ | LUTRAM¹ | FF¹ | CARRY4¹ | MUXF7/F8¹ | BRAM¹ | DSP¹ | Area² (µm²) | kGE³ |
 |---|---|---|---|---|---|---|---|---|---|
-| `syn_sync` (`cbufg`, `sync2dff`, `sync2dffrn`) | 2 | 0 | 4 | 0 | 0 | 0 | 0 | 90.09 | 0.024 |
+| `syn_sync` (`cbufg`, `sync2dff`, `sync2dffrn`) | 1 | 0 | 4 | 0 | 0 | 0 | 0 | 90.09 | 0.024 |
 
 `cbufg` is a wire (no cell); `sync2dff` and `sync2dffrn` are 2 flip-flops each. Not in the table:
 
 - `cgate`: its latch is rejected by the GHDL plugin of Yosys (the `ghdl --synth` check `lint_ghdl_synth_cgate_latch` allows it with `--latches`); its cost is a latch, an OR and an AND gate;
 - `ibuf`, `obuf`, `iobuf`: their tri-states are pads, rejected by the Artix-7 flow without I/O pads (`synth_xilinx -noiopad`); they map on the I/O cells of the chip, at its top level.
 
-¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. An `INV` counts as a `LUT1`: `synth_xilinx` puts one on the reset pin of each flip-flop with the active-low reset (the 2 flip-flops of `sync2dffrn`). No memory.
+¹ Xilinx Artix-7 (LUT6), Yosys 0.33 `synth_xilinx -flatten -noiopad -noclkbuf`, before place and route: every cell of the netlist is counted, Vivado may differ. Identical cells are merged as a vendor tool does (`opt_merge -share_all`): the inverters of an active-low reset net become one; every remaining cell is counted, an `INV` as a `LUT1` (the only LUT: one `INV` for the 2 flip-flops of `sync2dffrn`). No memory.
 
 ² SkyWater sky130 `sky130_fd_sc_hd`, typical corner (tt, 25 °C, 1.80 V), Yosys 0.33 `synth` + `dfflibmap` + `abc -liberty`: standard-cell area only (4 flip-flops), no timing constraint, no buffering, clock tree or placement.
 
