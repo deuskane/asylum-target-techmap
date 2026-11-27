@@ -42,8 +42,9 @@ architecture rtl of sync2dffrn is
 
   -- Attributes of the synchronization chain for the synthesis tools: keep
   -- both flip-flops (no shift register extraction, no retiming, duplication
-  -- or merging with other logic) and place them close together. The path to q_r(0) is
-  -- asynchronous: declare it as a false path in the design constraints.
+  -- or merging with other logic) and place them close together. The path to
+  -- q_r(0) is asynchronous: declare it as a false path in the design
+  -- constraints.
   --   ASYNC_REG     : Xilinx Vivado / ISE
   --   SHREG_EXTRACT : Xilinx Vivado / XST (no SRL inference)
   --   syn_preserve  : Synplify, NanoXplore NXmap (preserve registers)
