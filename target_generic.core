@@ -22,9 +22,11 @@ CAPI=2:
 # 2026-10-05  1.1.5    mrosiere Add UVVM testbench tb_techmap (sim_techmap)
 #                               Rename lint target to lint_generic
 #                               ibuf : drive 'Z' on buf_io
+# 2026-11-27  1.1.6    mrosiere sync2dffrn : comment of the attributes reworded
+#                               (read as a pragma by ghdl --synth)
 #-----------------------------------------------------------------------------
 
-name        : asylum:target:generic:1.1.5
+name        : asylum:target:generic:1.1.6
 description : Inferred Technology Cells
 
 #=========================================

@@ -17,6 +17,9 @@
 -- Revisions  :
 -- Date        Version  Author   Description
 -- 2025-01-06  1.0      mrosiere Created
+-- 2026-11-27  1.1      mrosiere Comment of the attributes reworded : a comment
+--                               starting with "Synthesis" is read as a pragma
+--                               by ghdl --synth
 -------------------------------------------------------------------------------
 
 library IEEE;
@@ -37,10 +40,11 @@ architecture rtl of sync2dffrn is
   constant WIDTH : natural := 2;
   signal   q_r   : std_logic_vector(WIDTH-1 downto 0);  -- Synchronization chain
 
-  -- Synthesis attributes of the synchronization chain: keep both flip-flops
-  -- (no shift register extraction, no retiming, duplication or merging with
-  -- other logic) and place them close together. The path to q_r(0) is
-  -- asynchronous: declare it as a false path in the design constraints.
+  -- Attributes of the synchronization chain for the synthesis tools: keep
+  -- both flip-flops (no shift register extraction, no retiming, duplication
+  -- or merging with other logic) and place them close together. The path to
+  -- q_r(0) is asynchronous: declare it as a false path in the design
+  -- constraints.
   --   ASYNC_REG     : Xilinx Vivado / ISE
   --   SHREG_EXTRACT : Xilinx Vivado / XST (no SRL inference)
   --   syn_preserve  : Synplify, NanoXplore NXmap (preserve registers)
