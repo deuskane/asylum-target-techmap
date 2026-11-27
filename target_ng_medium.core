@@ -19,9 +19,11 @@ CAPI=2:
 # 2026-08-24  1.0.3    mrosiere Add ibuf and obuf
 # 2026-09-19  1.0.4    mrosiere Move package from generic to common
 # 2026-10-05  1.0.5    mrosiere ibuf : drive 'Z' on buf_io
+# 2026-11-27  1.0.6    mrosiere sync2dffrn : comment of the attributes reworded
+#                               (read as a pragma by ghdl --synth)
 #-----------------------------------------------------------------------------
 
-name        : nanoxplore:target:ng_medium:1.0.5
+name        : nanoxplore:target:ng_medium:1.0.6
 description : Technology Cells for FPGA NG_MEDIUM from NanoXplore
 
 #=========================================
